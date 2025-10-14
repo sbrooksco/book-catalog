@@ -1,0 +1,20 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
+
+logging:
+  level: INFO
+  loggers:
+    org.example: DEBUG
+
+database:
+  driverClass: org.postgresql.Driver
+  user: bookuser
+  password: bookpass
+  # Note db in the url.  This is the service name in the docker container
+  url: jdbc:postgresql://db:5432/bookdb
+  validationQuery: "SELECT 1"

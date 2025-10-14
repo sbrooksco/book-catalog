@@ -1,0 +1,28 @@
+version: '3.9'
+services:
+  db:
+    image: postgres:16
+    container_name: bookdb
+    environment:
+      POSTGRES_USER: bookuser
+      POSTGRES_PASSWORD: bookpass
+      POSTGRES_DB: bookdb
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    container_name: book-catalog
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      - db
+    environment:
+      DB_URL: jdbc:postgresql://db:5432/bookdb
+      DB_USER: bookuser
+      DB_PASSWORD: bookpass
