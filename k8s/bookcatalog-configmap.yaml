@@ -1,0 +1,8 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: book-config
+data:
+  DATABASE_URL: jdbc:postgresql://postgres:5432/bookdb
+  DATABASE_USER: bookuser
+  DATABASE_NAME: bookdb

@@ -6,7 +6,7 @@ WORKDIR /app
 # Copy the JAR from the build context (which will be project root)
 COPY target/book-catalog-1.0-SNAPSHOT.jar app.jar
 
-# Copy the config file
+# Copy the config file.  This allows us to call it without a path in the CMD
 COPY src/main/resources/config.yaml config.yaml
 
 # Expose Dropwizard ports
