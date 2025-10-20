@@ -13,8 +13,11 @@ logging:
 
 database:
   driverClass: org.postgresql.Driver
-  user: bookuser
-  password: bookpass
+  user: ${DATABASE_USER:-bookuser}
+  password: ${DATABASE_PASSWORD:-bookpass}
+  url: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/bookdb}
+  #user: bookuser
+  #password: bookpass
   # Note postgres in the url.  This is the service name in the docker container (Look at the service name in the k8s yaml file.
-  url: jdbc:postgresql://postgres:5432/bookdb
+  #url: jdbc:postgresql://postgres:5432/bookdb
   validationQuery: "SELECT 1"

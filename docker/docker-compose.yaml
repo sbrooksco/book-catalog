@@ -1,6 +1,5 @@
-version: '3.9'
 services:
-  db:
+  postgres:
     image: postgres:16
     container_name: bookdb
     environment:
@@ -21,8 +20,8 @@ services:
       - "8080:8080"
       - "8081:8081"
     depends_on:
-      - db
+      - postgres
     environment:
-      DB_URL: jdbc:postgresql://db:5432/bookdb
-      DB_USER: bookuser
-      DB_PASSWORD: bookpass
+      DATABASE_URL: jdbc:postgresql://postgres:5432/bookdb
+      DATABASE_USER: bookuser
+      DATABASE_PASSWORD: bookpass

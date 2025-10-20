@@ -13,7 +13,7 @@ spec:
         - name: migrate
           image: book-catalog:latest
           imagePullPolicy: Never
-          command: ["java", "-jar", "book-catalog-1.0-SNAPSHOT.jar", "db", "migrate", "src/main/resources/config.yml"]
+          command: ["java", "-jar", "app.jar", "db", "migrate", "config.yml"]
           env:
             - name: DATABASE_URL
               valueFrom:

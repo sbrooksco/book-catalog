@@ -159,7 +159,7 @@ book-catalog/
 │   │   ├── resources/
 │   │   │   ├── banner.txt
 │   │   │   ├── config.yml
-│   │   │   └── migrations/
+│   │   │   └── db/
 │   │   │       ├── V1__create_books_table.sql
 │   │   │       └── V2__add_indexes.sql  ← (future migrations)
 │   │   └── webapp/                      ← (optional if you serve static assets)
@@ -173,7 +173,8 @@ book-catalog/
 ├── k8s/
 │   ├── postgres.yaml                ← PostgreSQL Deployment + Service
 │   ├── bookcatalog.yaml             ← Dropwizard App Deployment + Service
-│   ├── bookcatalog-migrate.yaml     ← Flyway Migration Job
+│   ├── bookcatalog-configmap.yaml
+│   ├── bookcatalog-secret.yaml
 │   └── namespace.yaml               ← (optional, for namespace isolation)
 │
 ├── scripts/
@@ -185,38 +186,50 @@ book-catalog/
 └── .gitignore
 
 ```
+MONDAY MONDAY MONDAY
+
+in <root>/docker run this against the docker-compose.yaml.  IT still fails.
+docker compose up --build
+
+docker compose down -v
+
+
 Do this on Thursday.  
 Create the docker images as tar files locally to avoid pushing to /pulling from a registry
 like Docker Hub or Git Hub etc.
 
-**Docker build the app image:**
+# Start Colima with Kubernetes enabled
+colima start --kubernetes
+
+# Docker build the app image:
 
 From the project root
+
 docker build -t book-catalog:latest -f docker/Dockerfile .
 
-Explanation:
+    Explanation:
 
--f docker/Dockerfile → tells Docker where the Dockerfile is.
+    -f docker/Dockerfile → tells Docker where the Dockerfile is.
 
-. → sets the build context to the project root, so src/ and target/ are visible.
+    . → sets the build context to the project root, so src/ and target/ are visible.
 
-Note:
-
-This runs the docker image so you can log in and take a look at the contents.
+*Note: This runs the docker image so you can log in and take a look at the contents:*
 
 docker run -it --rm book-catalog:latest bash
 
-Note: You are using the base postgres:16 image so nothing to build
-      You would build if you make a custom image.
+*Note: You are using the base postgres:16 image so nothing to build.
+      You would build if you make a custom image.*
 
 
 # Apply manifests
-# Apply config and secrets first
+### Apply config and secrets first
 kubectl apply -f k8s/bookcatalog-configmap.yaml
+
 kubectl apply -f k8s/bookcatalog-secret.yaml
 
 # Deploy Postgres
 kubectl apply -f k8s/postgres.yaml
+
 kubectl rollout status deployment/postgres
 
 
@@ -226,6 +239,7 @@ kubectl logs -f job/bookcatalog-migrate
 
 # Deploy Book Catalog app
 kubectl apply -f k8s/bookcatalog.yaml
+
 kubectl rollout status deployment/book-catalog
 
 # Test it
@@ -245,6 +259,7 @@ k delete deployment postgres
 
 colima stop
 
+-------------------------------------------------------------
 **Export them as tarballs:**
 
 docker save -o book-catalog.tar book-catalog:latest
@@ -266,28 +281,28 @@ colima nerdctl load -i book-catalog.tar
 colima nerdctl load -i hellodb.tar
 
 # Apply manifests
-# Apply config and secrets first
+### Apply config and secrets first
 kubectl apply -f k8s/configmap.yaml
 kubectl apply -f k8s/secret.yaml
 
-# Deploy Postgres
+### Deploy Postgres
 kubectl apply -f k8s/postgres.yaml
 kubectl rollout status deployment/postgres
 
-# Run database migration job
+### Run database migration job
 kubectl apply -f k8s/migrate-job.yaml
 kubectl logs -f job/bookcatalog-migrate
 
-# Deploy Book Catalog app
+### Deploy Book Catalog app
 kubectl apply -f k8s/bookcatalog.yaml
 kubectl rollout status deployment/book-catalog
 
 
-# Verify everything
+### Verify everything
 kubectl get pods
 kubectl get svc
 
-# Test your API
+### Test your API
 curl http://localhost:30080/books
 
 
