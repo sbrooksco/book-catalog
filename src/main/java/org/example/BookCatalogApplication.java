@@ -85,6 +85,7 @@ public class BookCatalogApplication extends Application<BookCatalogConfiguration
         Flyway flyway = Flyway.configure()
                 .dataSource(ds)
                 .locations("classpath:db") // make sure your SQL migrations are in src/main/resources/db
+                .baselineOnMigrate(true) // If the schema isn’t empty but has no schema history table, create one and assume it’s already at version 1.
                 .load();
         flyway.migrate();
 

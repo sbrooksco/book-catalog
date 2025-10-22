@@ -81,7 +81,13 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-core</artifactId>
-            <version>10.16.0</version> <!-- or the latest stable version -->
+            <version>10.22.0</version> <!-- or the latest stable version -->
+        </dependency>
+        <!-- Include the postgres specific adapter -->
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
+            <version>10.22.0</version>
         </dependency>
 
         <!-- Testing -->

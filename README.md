@@ -188,8 +188,12 @@ book-catalog/
 ```
 MONDAY MONDAY MONDAY
 
-in <root>/docker run this against the docker-compose.yaml.  IT still fails.
+in <root>/docker run this against the docker-compose.yaml. 
 docker compose up --build
+
+Test: 
+
+    curl http://localhost:8080/books
 
 docker compose down -v
 
