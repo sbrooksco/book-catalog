@@ -27,6 +27,12 @@ How to start the BookCatalog application
 15. Stop the containers
     16. docker compose -f docker/docker-compose.yaml down
 
+
+Commands to check the logs:
+```
+    docker logs book-catalog
+    docker logs bookdb
+```
 +++
 
 Intentional error:
@@ -53,27 +59,59 @@ Health Check
 To see your applications health enter url `http://localhost:8081/healthcheck`
 
 -----------------
+Project Structure:
 ```
-book-catalog/                  <-- project root (Maven build context)
-├── pom.xml                    <-- Maven project file
-├── target/                    <-- Maven output directory
+book-catalog/
+├── Dockerfile
+├── README.md
+├── pom.xml
+├── target/
 │   └── book-catalog-1.0-SNAPSHOT.jar
+│
 ├── src/
 │   ├── main/
 │   │   ├── java/
-│   │   │   └── org/example/
-│   │   │       ├── BookCatalogApplication.java
-│   │   │       ├── BookCatalogConfiguration.java
-│   │   │       ├── core/Book.java
-│   │   │       ├── db/BookDAO.java
-│   │   │       └── resources/BookResource.java
-│   │   └── resources/
-│   │       └── config.yaml
-│   └── test/                  <-- optional test classes
-├── docker/                    <-- Docker-related files
-│   ├── Dockerfile             <-- builds the app image
-│   └── docker-compose.yaml    <-- runs app + db together
-└── README.md
+│   │   │   └── org/
+│   │   │       └── example/
+│   │   │           └── bookcatalog/
+│   │   │               ├── BookCatalogApplication.java
+│   │   │               ├── BookCatalogConfiguration.java
+│   │   │               ├── core/
+│   │   │               │   └── Book.java
+│   │   │               ├── db/
+│   │   │               │   └── BookDAO.java
+│   │   │               ├── resources/
+│   │   │               │   └── BookResource.java
+│   │   │               └── health/
+│   │   │                   └── DatabaseHealthCheck.java
+│   │   ├── resources/
+│   │   │   ├── banner.txt
+│   │   │   ├── config.yml
+│   │   │   └── db/
+│   │   │       ├── V1__create_books_table.sql
+│   │   │       └── V2__add_indexes.sql  ← (future migrations)
+│   │   └── webapp/                      ← (optional if you serve static assets)
+│   └── test/
+│       └── java/
+│           └── org/
+│               └── example/
+│                   └── bookcatalog/
+│                       └── BookResourceTest.java
+│
+├── k8s/
+│   ├── postgres.yaml                ← PostgreSQL Deployment + Service
+│   ├── bookcatalog.yaml             ← Dropwizard App Deployment + Service
+│   ├── bookcatalog-configmap.yaml
+│   ├── bookcatalog-secret.yaml
+│   └── namespace.yaml               ← (optional, for namespace isolation)
+│
+├── scripts/
+│   ├── build.sh                     ← builds app + docker image
+│   ├── run-local.sh                 ← starts containers locally with Docker Compose
+│   └── load-images.sh               ← loads images into Colima’s Docker runtime
+│
+├── docker-compose.yml               ← optional for local testing
+└── .gitignore
 ```
 -----------------
 
@@ -133,71 +171,8 @@ Optional:
     Add Database Migrations
 
 ```
-book-catalog/
-├── Dockerfile
-├── README.md
-├── pom.xml
-├── target/
-│   └── book-catalog-1.0-SNAPSHOT.jar
-│
-├── src/
-│   ├── main/
-│   │   ├── java/
-│   │   │   └── org/
-│   │   │       └── example/
-│   │   │           └── bookcatalog/
-│   │   │               ├── BookCatalogApplication.java
-│   │   │               ├── BookCatalogConfiguration.java
-│   │   │               ├── core/
-│   │   │               │   └── Book.java
-│   │   │               ├── db/
-│   │   │               │   └── BookDAO.java
-│   │   │               ├── resources/
-│   │   │               │   └── BookResource.java
-│   │   │               └── health/
-│   │   │                   └── DatabaseHealthCheck.java
-│   │   ├── resources/
-│   │   │   ├── banner.txt
-│   │   │   ├── config.yml
-│   │   │   └── db/
-│   │   │       ├── V1__create_books_table.sql
-│   │   │       └── V2__add_indexes.sql  ← (future migrations)
-│   │   └── webapp/                      ← (optional if you serve static assets)
-│   └── test/
-│       └── java/
-│           └── org/
-│               └── example/
-│                   └── bookcatalog/
-│                       └── BookResourceTest.java
-│
-├── k8s/
-│   ├── postgres.yaml                ← PostgreSQL Deployment + Service
-│   ├── bookcatalog.yaml             ← Dropwizard App Deployment + Service
-│   ├── bookcatalog-configmap.yaml
-│   ├── bookcatalog-secret.yaml
-│   └── namespace.yaml               ← (optional, for namespace isolation)
-│
-├── scripts/
-│   ├── build.sh                     ← builds app + docker image
-│   ├── run-local.sh                 ← starts containers locally with Docker Compose
-│   └── load-images.sh               ← loads images into Colima’s Docker runtime
-│
-├── docker-compose.yml               ← optional for local testing
-└── .gitignore
 
 ```
-MONDAY MONDAY MONDAY
-
-in <root>/docker run this against the docker-compose.yaml. 
-docker compose up --build
-
-Test: 
-
-    curl http://localhost:8080/books
-
-docker compose down -v
-
-
 Do this on Thursday.  
 Create the docker images as tar files locally to avoid pushing to /pulling from a registry
 like Docker Hub or Git Hub etc.

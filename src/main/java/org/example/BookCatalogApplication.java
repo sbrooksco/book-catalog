@@ -8,14 +8,21 @@ import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.db.DataSourceFactory;
 import org.example.core.Book;
 import org.example.db.BookDAO;
+import org.example.health.DatabaseHealthCheck;
 import org.example.resources.BookResource;
 import org.flywaydb.core.Flyway;
+import org.flywaydb.core.api.output.MigrateResult;
+import org.postgresql.ds.PGSimpleDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
 
 public class BookCatalogApplication extends Application<BookCatalogConfiguration> {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BookCatalogApplication.class);
 
     private final HibernateBundle<BookCatalogConfiguration> hibernate = new HibernateBundle<>(Book.class) {
         @Override
@@ -44,22 +51,26 @@ public class BookCatalogApplication extends Application<BookCatalogConfiguration
         String dbUrl = configuration.getDataSourceFactory().getUrl();
         String dbUser = configuration.getDataSourceFactory().getUser();
         String dbPass = configuration.getDataSourceFactory().getPassword();
-        System.out.println("Database URL: " + configuration.getDataSourceFactory().getUrl());
 
-        System.out.println("Connecting to database: " + dbUrl);
+        // Register the database health check.
+        DatabaseHealthCheck healthCheck = new DatabaseHealthCheck(dbUrl, dbUser, dbPass);
+        environment.healthChecks().register("database", healthCheck);
+
+        LOGGER.info("Database URL: {}", dbUrl);
+        LOGGER.info("Checking database readiness...");
 
         // --- Wait for Postgres to be ready ---
         int retries = 10;
         int waitSeconds = 3;
-
         boolean dbReady = false;
+
         for (int i = 0; i < retries; i++) {
             try (Connection conn = DriverManager.getConnection(dbUrl, dbUser, dbPass)) {
-                System.out.println("Database is ready!");
+                LOGGER.info("Database is ready!");
                 dbReady = true;
                 break;
             } catch (SQLException e) {
-                System.out.println("Database not ready, waiting " + waitSeconds + "s...");
+                LOGGER.warn("Database not ready (attempt {}/{}). Waiting {}s...", i + 1, retries, waitSeconds);
                 try {
                     Thread.sleep(waitSeconds * 1000L);
                 } catch (InterruptedException ie) {
@@ -76,7 +87,7 @@ public class BookCatalogApplication extends Application<BookCatalogConfiguration
         Class.forName("org.postgresql.Driver");
 
         // Create a DataSource manually
-        org.postgresql.ds.PGSimpleDataSource ds = new org.postgresql.ds.PGSimpleDataSource();
+        PGSimpleDataSource ds = new PGSimpleDataSource();
         ds.setUrl(dbUrl);
         ds.setUser(dbUser);
         ds.setPassword(dbPass);
@@ -87,10 +98,19 @@ public class BookCatalogApplication extends Application<BookCatalogConfiguration
                 .locations("classpath:db") // make sure your SQL migrations are in src/main/resources/db
                 .baselineOnMigrate(true) // If the schema isn’t empty but has no schema history table, create one and assume it’s already at version 1.
                 .load();
-        flyway.migrate();
+
+        try {
+            LOGGER.info("Starting Flyway migrations...");
+            MigrateResult result = flyway.migrate();
+            LOGGER.info("Flyway migration complete. {} migrations executed.", result.migrationsExecuted);
+        } catch (Exception e) {
+            LOGGER.error("Flyway migration failed: {}", e.getMessage(), e);
+            throw e; // Stop startup on failure
+        }
 
         // Register your resources
         environment.jersey().register(new BookResource(dao));
+        LOGGER.info("BookCatalog application started successfully!");
     }
 
     @Override
