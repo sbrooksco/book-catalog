@@ -1,65 +1,108 @@
 # BookCatalog
 
-How to start the BookCatalog application
----
+This project exemplifies how to create a dropwizard application to deploy a basic REST API 
+that runs against a postgres database.
 
-1. Run `mvn clean install` to build your application
-2. Run docker compose to start the containers
-   3. docker compose -f docker/docker-compose.yaml up --build -d
-3. Tail logs to see Dropwizard connect to Postgres:
-   4. docker compose -f docker/docker-compose.yaml logs -f app
-5. Test the endpoint
-   6. curl http://localhost:8080/books
-7. Add a book:
-   8. curl -X POST -H "Content-Type: application/json" \
-      -d '{"title":"The Hobbit","author":"J.R.R. Tolkien"}' \
-      http://localhost:8080/books
-9. Get the books
-   10. curl http://localhost:8080/books
-9. Get a book by ID:
-   10. curl http://localhost:8080/books/1
-11. Update a book
-    12. curl -X PUT -H "Content-Type: application/json" \
-        -d '{"title":"The Hobbit: Updated","author":"J.R.R. Tolkien"}' \
-        http://localhost:8080/books/1
-13. Delete a book by ID:
-    14. curl -X DELETE http://localhost:8080/books/1
-15. Stop the containers
-    16. docker compose -f docker/docker-compose.yaml down
+The postgres database and the bookcatalog application are containerized and deployable in
+a kubernetes cluster.  The examples given here show how to deploy the containers or to the 
+kubernetes cluster using colima.
 
 
+# How to run the BookCatalog application
+## Deploy just the docker containers:
+```
+docker compose -f docker/docker-compose.yaml up --build -d
+```
 Commands to check the logs:
 ```
     docker logs book-catalog
     docker logs bookdb
 ```
-+++
+Take down the deployment
+```
+docker compose -f docker/docker-compose.yaml down
+```
 
-Intentional error:
+## Deploy in kubernetes
+```
+# Start Colima with Kubernetes enabled
+colima start --kubernetes
 
-% curl http://localhost:8080/books/1 {"code":405,"message":"HTTP 405 Method Not Allowed"}%
+# Apply manifests
 
-So I checked and BookResource.java was missing
-@GET
-    @Path("/{id}")
-    @UnitOfWork
-    public Book getBook(@PathParam("id") int id) {   // <-- should handle GET /books/{id}
-        return dao.findById(id);
-    }
+kubectl apply -f k8s/
+
+# Alternatively you can deploy the manifiests one by one:
+# Apply config and secrets first
+kubectl apply -f k8s/configmap.yaml
+kubectl apply -f k8s/secret.yaml
+
+# Deploy Postgres
+kubectl apply -f k8s/postgres.yaml
+kubectl rollout status deployment/postgres
+
+# Deploy Book Catalog app
+kubectl apply -f k8s/bookcatalog.yaml
+kubectl rollout status deployment/book-catalog
+
+# Verify everything
+kubectl get pods
+kubectl get svc
+
+# Remember to forward the ports:
+kubectl port-forward svc/book-catalog -n 8080:8080
+
+### Test your API
+curl http://localhost:8080/books
 
 
-+++
-Non docker execution:
+# Clean up
+kubectl delete -f k8s/
+
+colima stop
+```
+
+# Example Operations on the endpoint
+
+## Test the endpoint
+    curl http://localhost:8080/books
+
+## Add a book:
+    curl -X POST -H "Content-Type: application/json" \
+      -d '{"title":"The Hobbit","author":"J.R.R. Tolkien"}' \
+      http://localhost:8080/books
+## List the books
+    curl http://localhost:8080/books
+## Get a book by ID:
+    curl http://localhost:8080/books/1
+## Update a book
+    curl -X PUT -H "Content-Type: application/json" \
+        -d '{"title":"The Hobbit: Updated","author":"J.R.R. Tolkien"}' \
+        http://localhost:8080/books/1
+## Delete a book by ID:
+    curl -X DELETE http://localhost:8080/books/1
+
+
+# Health Check
+
+To see the application's health enter url `http://localhost:8081/healthcheck`
+
+# Non docker execution:
 1. Start application with `java -jar target/book-catalog-1.0-SNAPSHOT.jar server config.yaml`
 1. To check that your application is running enter url `http://localhost:8080`
 
-Health Check
----
 
-To see your applications health enter url `http://localhost:8081/healthcheck`
+# TODO
+Helm charts to simplify deployment
+Add a liveness probe
+Add a persistent volume for postgres
+Add a front end 
+Add a service LoadBalancer
+Expose the application fian ingress instead of a LoadBalancer
+Add a Grafana dashboard for monitoring
 
 -----------------
-Project Structure:
+# Project Structure
 ```
 book-catalog/
 ├── Dockerfile
@@ -115,9 +158,9 @@ book-catalog/
 ```
 -----------------
 
-Setup
+# Project Setup
 
-1. 
+Step 1. Create the framework
 ```
 mvn archetype:generate \
   -DarchetypeGroupId=io.dropwizard.archetypes \
@@ -140,7 +183,7 @@ mvn clean package
 java -jar target/book-catalog-1.0-SNAPSHOT.jar server src/main/resources/config.yaml
 ```
 
-STEP 2.
+STEP 2. Add classes for the entity, resource and data access object.
 
 Create 
 	Book.java
@@ -154,153 +197,11 @@ Update
 		Update run() to instantiate a BookDAO as dao 
 				and register a BookResource(dao)
 
-NOTE:  This is diverging from the hello-dropwizard app in that it is really using a database
-so we need MIGRATIONS as a way to create tables and to update the schema.
+STEP 3. Set up the kubernetes configuration
 
-STEP 3. (KUBERNETES)
 Create K8S manifests for
     The PostgreSQL database (Deployment, Service, PVC)
     The Book Catalog API (Deployment, Service)
 Configure environment variables and networking (so the app can talk to the DB service)
 Optionally add a ConfigMap for your YAML config instead of baking it into the container.
 Test deployment
-
-
-Optional:
-    Add a Service LoadBalancer
-    Add Database Migrations
-
-```
-
-```
-Do this on Thursday.  
-Create the docker images as tar files locally to avoid pushing to /pulling from a registry
-like Docker Hub or Git Hub etc.
-
-# Start Colima with Kubernetes enabled
-colima start --kubernetes
-
-# Docker build the app image:
-
-From the project root
-
-docker build -t book-catalog:latest -f docker/Dockerfile .
-
-    Explanation:
-
-    -f docker/Dockerfile → tells Docker where the Dockerfile is.
-
-    . → sets the build context to the project root, so src/ and target/ are visible.
-
-*Note: This runs the docker image so you can log in and take a look at the contents:*
-
-docker run -it --rm book-catalog:latest bash
-
-*Note: You are using the base postgres:16 image so nothing to build.
-      You would build if you make a custom image.*
-
-
-# Apply manifests
-### Apply config and secrets first
-kubectl apply -f k8s/bookcatalog-configmap.yaml
-
-kubectl apply -f k8s/bookcatalog-secret.yaml
-
-# Deploy Postgres
-kubectl apply -f k8s/postgres.yaml
-
-kubectl rollout status deployment/postgres
-
-
-# Run database migration job  SKIP FOR NOW
-kubectl apply -f k8s/migrate-job.yaml
-kubectl logs -f job/bookcatalog-migrate
-
-# Deploy Book Catalog app
-kubectl apply -f k8s/bookcatalog.yaml
-
-kubectl rollout status deployment/book-catalog
-
-# Test it
-kubectl port-forward svc/book-catalog 8080:8080
-
-
-curl http://localhost:8080/books
-
-
-# Clean up
-
-k get deployment
-k delete deployment book-catalog
-k delete deployment postgres
-
-?? What about the config map and the secret?
-
-colima stop
-
--------------------------------------------------------------
-**Export them as tarballs:**
-
-docker save -o book-catalog.tar book-catalog:latest
-docker save -o hellodb.tar hellodb:custom
-
-**Load them into colima:**
-
-colima nerdctl load -i book-catalog.tar
-colima nerdctl load -i hellodb.tar
-
-
-
-
-# Start Colima with Kubernetes enabled
-colima start --kubernetes
-
-# Load images into Colima
-colima nerdctl load -i book-catalog.tar
-colima nerdctl load -i hellodb.tar
-
-# Apply manifests
-### Apply config and secrets first
-kubectl apply -f k8s/configmap.yaml
-kubectl apply -f k8s/secret.yaml
-
-### Deploy Postgres
-kubectl apply -f k8s/postgres.yaml
-kubectl rollout status deployment/postgres
-
-### Run database migration job
-kubectl apply -f k8s/migrate-job.yaml
-kubectl logs -f job/bookcatalog-migrate
-
-### Deploy Book Catalog app
-kubectl apply -f k8s/bookcatalog.yaml
-kubectl rollout status deployment/book-catalog
-
-
-### Verify everything
-kubectl get pods
-kubectl get svc
-
-### Test your API
-curl http://localhost:30080/books
-
-
-
-
-
-
-
-====
-1. HibernateBundle (See BookCatalogApplication)
-   2. Integrates Hibernate with Dropwizard
-   3. Scans your Book entity for ORM mappings
-2. BookDAO
-   3. Created within the session factory from the Hibernate bundle
-   4. Handles database CRUD operations
-3. BookResource
-   4. Your REST endpoint (/books)
-   5. Registered with Jersey so it becomes available via HTTP
-4. BookCatalogConfiguration
-   5. Has a DataSourceFactory database field
-   6. hibernate uses this for database config.
-====
