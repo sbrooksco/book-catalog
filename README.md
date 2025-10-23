@@ -93,13 +93,13 @@ To see the application's health enter url `http://localhost:8081/healthcheck`
 
 
 # TODO
-Helm charts to simplify deployment
-Add a liveness probe
-Add a persistent volume for postgres
-Add a front end 
-Add a service LoadBalancer
-Expose the application fian ingress instead of a LoadBalancer
-Add a Grafana dashboard for monitoring
+* Helm charts to simplify deployment
+* Add a liveness probe
+* Add a persistent volume for postgres
+* Add a front end 
+* Add a service LoadBalancer
+* Expose the application via ingress instead of a LoadBalancer
+* Add a Grafana dashboard for monitoring
 
 -----------------
 # Project Structure
