@@ -50,7 +50,11 @@ kubectl get pods
 kubectl get svc
 
 # Remember to forward the ports:
-kubectl port-forward svc/book-catalog -n 8080:8080
+kubectl port-forward svc/book-catalog 8080:8080
+
+Note, if it was in a different namespaces you wuld run it like this:
+kubectl port-forward svc/book-catalog 8080:8080 -n <namespace>>
+
 
 ### Test your API
 curl http://localhost:8080/books
@@ -86,6 +90,12 @@ colima stop
 # Health Check
 
 To see the application's health enter url `http://localhost:8081/healthcheck`
+
+# Unit Test Report
+
+mvn clean test
+
+project root/target/site/jacoco/index.html
 
 # Non docker execution:
 1. Start application with `java -jar target/book-catalog-1.0-SNAPSHOT.jar server config.yaml`
