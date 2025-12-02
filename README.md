@@ -13,17 +13,33 @@ kubernetes cluster using colima.
 ```
 docker compose -f docker/docker-compose.yaml up --build -d
 ```
+## If you need to force recreate the containers
+```
+docker compose -f docker/docker-compose.yaml up --build -d --force-recreate
+```
 Commands to check the logs:
 ```
     docker logs book-catalog
     docker logs bookdb
+    docker logs review-service
+    docker logs reviewdb
 ```
 Take down the deployment
 ```
 docker compose -f docker/docker-compose.yaml down
 ```
 
-## Deploy in kubernetes
+# Sanity Testing
+## Test book-service
+curl http://localhost:8080/books \
+curl http://localhost:8081/healthcheck \
+## Test review-service
+curl http://localhost:8082/reviews \
+curl http://localhost:8083/healthcheck \
+## Test inter-service communication.
+curl http://localhost:8082/reviews/books
+
+# Deploy in kubernetes
 ```
 # Start Colima with Kubernetes enabled
 colima start --kubernetes

@@ -1,27 +1,67 @@
+name: book-catalog
+
 services:
-  postgres:
+  bookdb:
     image: postgres:16
-    container_name: bookdb
+    #container_name: bookdb  # This names the container but cleanup can be trickier
     environment:
       POSTGRES_USER: bookuser
       POSTGRES_PASSWORD: bookpass
       POSTGRES_DB: bookdb
     ports:
       - "5432:5432"
-    volumes:
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bookuser -d bookdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
 
-  app:
+  reviewdb:
+    image: postgres:16
+    #container_name: reviewdb
+    environment:
+      POSTGRES_USER: reviewuser
+      POSTGRES_PASSWORD: reviewpass
+      POSTGRES_DB: reviewdb
+    ports:
+      - "5433:5432"  # Different external port
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U reviewuser -d reviewdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  book-service:
     build:
       context: ..
-      dockerfile: docker/Dockerfile
-    container_name: book-catalog
+      dockerfile: book-service/Dockerfile
+    #container_name: book-service
     ports:
       - "8080:8080"
       - "8081:8081"
     depends_on:
-      - postgres
+      bookdb:
+        condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:postgresql://postgres:5432/bookdb
+      DATABASE_URL: jdbc:postgresql://bookdb:5432/bookdb
       DATABASE_USER: bookuser
       DATABASE_PASSWORD: bookpass
+
+  review-service:
+    build:
+      context: ..
+      dockerfile: review-service/Dockerfile
+    #container_name: review-service
+    ports:
+      - "8082:8082"
+      - "8083:8083"
+    depends_on:
+      reviewdb:
+        condition: service_healthy
+      book-service:
+        condition: service_started
+    environment:
+      DATABASE_URL: jdbc:postgresql://reviewdb:5432/reviewdb
+      DATABASE_USER: reviewuser
+      DATABASE_PASSWORD: reviewpass
+      BOOK_SERVICE_URL: http://book-service:8080

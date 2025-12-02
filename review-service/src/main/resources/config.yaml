@@ -1,0 +1,21 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 8082  # Different port from book-service!
+  adminConnectors:
+    - type: http
+      port: 8083
+
+logging:
+  level: INFO
+  loggers:
+    org.example: DEBUG
+
+database:
+  driverClass: org.postgresql.Driver
+  user: ${DATABASE_USER:-reviewuser}
+  password: ${DATABASE_PASSWORD:-reviewpass}
+  url: ${DATABASE_URL:-jdbc:postgresql://reviewdb:5432/reviewdb}
+  validationQuery: "SELECT 1"
+
+bookServiceUrl: ${BOOK_SERVICE_URL:-http://book-service:8080}
