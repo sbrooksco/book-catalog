@@ -26,13 +26,19 @@ WORKDIR /app
 # Copy the jar and the config file from the build stage.
 COPY --from=build /app/review-service/target/review-service-*.jar ./review-service.jar
 COPY --from=build /app/review-service/src/main/resources/config.yaml ./config.yaml
+COPY review-service/start.sh ./start.sh
 
-EXPOSE 8082 8083
+RUN chmod +x start.sh
+
+#EXPOSE 8082 8083
+# Render will set PORT
+EXPOSE ${PORT:-8082}
 
 # Healthcheck on the admin port
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8081/healthcheck || exit 1
+#HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+#  CMD curl -f http://localhost:8081/healthcheck || exit 1
 
-ENTRYPOINT ["java", "-jar", "review-service.jar", "server", "config.yaml"]
+#ENTRYPOINT ["java", "-jar", "review-service.jar", "server", "config.yaml"]
+ENTRYPOINT ["./start.sh"]
 
 

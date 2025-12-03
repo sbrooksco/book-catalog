@@ -27,14 +27,17 @@ WORKDIR /app
 COPY --from=build /app/book-service/target/book-service-*.jar ./book-service.jar
 # The config from the build stage
 COPY --from=build /app/book-service/src/main/resources/config.yaml ./config.yaml
+COPY book-service/start.sh ./start.sh
 
-# Expose access port and admin/health port (8081
-EXPOSE 8080 8081
+RUN chmod +x start.sh
+
+# Render will set PORT, we just expose it
+EXPOSE ${PORT:-8080}
 
 # Healthcheck on the admin port
-HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
-  CMD curl -f http://localhost:8081/healthcheck || exit 1
+#HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+#  CMD curl -f http://localhost:8081/healthcheck || exit 1
 
-ENTRYPOINT ["java", "-jar", "book-service.jar", "server", "config.yaml"]
+ENTRYPOINT ["./start.sh"]
 
 

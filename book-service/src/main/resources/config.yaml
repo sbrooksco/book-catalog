@@ -1,10 +1,12 @@
 server:
   applicationConnectors:
     - type: http
-      port: 8080
+      #port: 8080
+      port: ${PORT:-8080}
   adminConnectors:
     - type: http
-      port: 8081
+      #port: 8081
+      port: ${PORT:-8080} # Use same port on Render
 
 logging:
   level: INFO
@@ -15,9 +17,6 @@ database:
   driverClass: org.postgresql.Driver
   user: ${DATABASE_USER:-bookuser}
   password: ${DATABASE_PASSWORD:-bookpass}
+  # This is the fallback when running locally, when deploying to the cloud, Render will set the DATABASE_URL
   url: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/bookdb}
-  #user: bookuser
-  #password: bookpass
-  # Note postgres in the url.  This is the service name in the docker container (Look at the service name in the k8s yaml file.
-  #url: jdbc:postgresql://postgres:5432/bookdb
   validationQuery: "SELECT 1"

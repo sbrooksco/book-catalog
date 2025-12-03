@@ -1,10 +1,12 @@
 server:
   applicationConnectors:
     - type: http
-      port: 8082  # Different port from book-service!
+      #port: 8082  # Different port from book-service!
+      port: ${PORT:-8082}
   adminConnectors:
     - type: http
-      port: 8083
+      #port: 8083
+      port: ${PORT:-8082}  # Use same port on Render
 
 logging:
   level: INFO
@@ -18,4 +20,8 @@ database:
   url: ${DATABASE_URL:-jdbc:postgresql://reviewdb:5432/reviewdb}
   validationQuery: "SELECT 1"
 
-bookServiceUrl: ${BOOK_SERVICE_URL:-http://book-service:8080}
+# The fallback is just for when running this directly, docker-compose sets bookServiceUrl
+#  When running locally (no Docker), services are on localhost
+#  Docker Compose overrides with service names like book-service
+#  Render overrides with public URLs
+bookServiceUrl: ${BOOK_SERVICE_URL:-http://localhost:8080}
