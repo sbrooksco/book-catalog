@@ -10,7 +10,8 @@ WORKDIR /app
 # Copy the whole project (so Maven can resolve the parent POM)
 COPY . .
 
-# Build only the book-service module
+# Build only the book-service module (disable tiered compilation for better performance)
+ENV MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m -XX:-TieredCompilation"
 RUN mvn -pl book-service -am clean package -DskipTests
 
 # Stage 2: Runtime Image (Just the JRE is needed)

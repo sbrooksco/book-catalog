@@ -59,8 +59,9 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         // Run Flyway migrations
         Flyway flyway = Flyway.configure()
                 .dataSource(dbUrl, dbUser, dbPass)
+                .schemas("books_schema")
                 .locations("classpath:db") // make sure your SQL migrations are in src/main/resources/db
-                .baselineOnMigrate(true) // If the schema isn’t empty but has no schema history table, create one and assume it’s already at version 1.
+                .table("flyway_schema_history_books") // Separate table for book-service
                 .load();
 
         try {

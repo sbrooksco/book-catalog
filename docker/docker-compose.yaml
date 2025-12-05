@@ -1,32 +1,16 @@
 name: book-catalog
 
 services:
-  bookdb:
+  catalogdb:
     image: postgres:16
-    #container_name: bookdb  # This names the container but cleanup can be trickier
     environment:
-      POSTGRES_USER: bookuser
-      POSTGRES_PASSWORD: bookpass
-      POSTGRES_DB: bookdb
+      POSTGRES_USER: cataloguser
+      POSTGRES_PASSWORD: catalogpass
+      POSTGRES_DB: catalogdb
     ports:
       - "5432:5432"
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U bookuser -d bookdb"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  reviewdb:
-    image: postgres:16
-    #container_name: reviewdb
-    environment:
-      POSTGRES_USER: reviewuser
-      POSTGRES_PASSWORD: reviewpass
-      POSTGRES_DB: reviewdb
-    ports:
-      - "5433:5432"  # Different external port
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U reviewuser -d reviewdb"]
+      test: ["CMD-SHELL", "pg_isready -U cataloguser -d catalogdb"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -35,33 +19,37 @@ services:
     build:
       context: ..
       dockerfile: book-service/Dockerfile
-    #container_name: book-service
     ports:
       - "8080:8080"
       - "8081:8081"
     depends_on:
-      bookdb:
+      catalogdb:
         condition: service_healthy
     environment:
-      DATABASE_URL: jdbc:postgresql://bookdb:5432/bookdb
-      DATABASE_USER: bookuser
-      DATABASE_PASSWORD: bookpass
+      DATABASE_URL: jdbc:postgresql://catalogdb:5432/catalogdb
+      DATABASE_USER: cataloguser
+      DATABASE_PASSWORD: catalogpass
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
 
   review-service:
     build:
       context: ..
       dockerfile: review-service/Dockerfile
-    #container_name: review-service
     ports:
       - "8082:8082"
       - "8083:8083"
     depends_on:
-      reviewdb:
+      catalogdb:
         condition: service_healthy
       book-service:
-        condition: service_started
+        condition: service_healthy # Wait for book-service to be healthy before starting review-service avoids race condition on database.
     environment:
-      DATABASE_URL: jdbc:postgresql://reviewdb:5432/reviewdb
-      DATABASE_USER: reviewuser
-      DATABASE_PASSWORD: reviewpass
+      DATABASE_URL: jdbc:postgresql://catalogdb:5432/catalogdb
+      DATABASE_USER: cataloguser
+      DATABASE_PASSWORD: catalogpass
       BOOK_SERVICE_URL: http://book-service:8080

@@ -5,8 +5,7 @@ server:
       port: ${PORT:-8082}
   adminConnectors:
     - type: http
-      #port: 8083
-      port: ${PORT:-8082}  # Use same port on Render
+      port: 8083
 
 logging:
   level: INFO
@@ -15,10 +14,12 @@ logging:
 
 database:
   driverClass: org.postgresql.Driver
-  user: ${DATABASE_USER:-reviewuser}
-  password: ${DATABASE_PASSWORD:-reviewpass}
-  url: ${DATABASE_URL:-jdbc:postgresql://reviewdb:5432/reviewdb}
+  user: ${DATABASE_USER:-cataloguser}
+  password: ${DATABASE_PASSWORD:-cataloguser}
+  url: ${DATABASE_URL:-jdbc:postgresql://catalogdb:5432/catalogdb}
   validationQuery: "SELECT 1"
+  properties:
+    hibernate.default_schema: reviews_schema
 
 # The fallback is just for when running this directly, docker-compose sets bookServiceUrl
 #  When running locally (no Docker), services are on localhost

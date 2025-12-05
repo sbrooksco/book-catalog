@@ -10,7 +10,8 @@ WORKDIR /app
 # Copy the whole project (so Maven can resolve the parent POM)
 COPY . .
 
-# Build only the review-service module
+# Build only the review-service module (disable tiered compilation for better performance)
+ENV MAVEN_OPTS="-Xmx512m -XX:MaxMetaspaceSize=256m -XX:-TieredCompilation"
 RUN mvn -pl review-service -am clean package -DskipTests
 
 # Stage 2: Runtime Image

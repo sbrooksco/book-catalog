@@ -90,8 +90,9 @@ public class ReviewServiceApplication extends Application<ReviewServiceConfigura
         // Run Flyway migrations
         Flyway flyway = Flyway.configure()
                 .dataSource(dsf.getUrl(), dsf.getUser(), dsf.getPassword())
+                .schemas("reviews_schema")
                 .locations("classpath:db")
-                .baselineOnMigrate(true)
+                .table("flyway_schema_history_reviews") // Separate table for review-service
                 .load();
 
         LOGGER.info("Starting Flyway migrations...");

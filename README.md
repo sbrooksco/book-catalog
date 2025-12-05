@@ -13,6 +13,7 @@ kubernetes cluster using colima.
 ```
 docker compose -f docker/docker-compose.yaml up --build -d
 ```
+-d is for detached mode, it runs in the background.
 ## If you need to force recreate the containers
 ```
 docker compose -f docker/docker-compose.yaml up --build -d --force-recreate
