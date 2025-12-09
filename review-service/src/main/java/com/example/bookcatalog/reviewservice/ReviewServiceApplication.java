@@ -84,6 +84,9 @@ public class ReviewServiceApplication extends Application<ReviewServiceConfigura
     public void run(ReviewServiceConfiguration configuration, Environment environment) {
         final ReviewDAO reviewDAO = new ReviewDAO(hibernateBundle.getSessionFactory());
 
+        // Add CORS filter
+        configureCors(environment);
+
         // Get database config
         DataSourceFactory dsf = configuration.getDataSourceFactory();
 
@@ -105,6 +108,15 @@ public class ReviewServiceApplication extends Application<ReviewServiceConfigura
 
         // Pass the client and URL into your resource
         environment.jersey().register(new ReviewResource(reviewDAO, client, bookServiceUrl));
+    }
+
+    private void configureCors(Environment environment) {
+        final var cors = environment.servlets().addFilter("CORS", org.eclipse.jetty.servlets.CrossOriginFilter.class);
+        cors.addMappingForUrlPatterns(java.util.EnumSet.allOf(jakarta.servlet.DispatcherType.class), true, "/*");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,PUT,POST,DELETE,OPTIONS");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true");
     }
 }
 

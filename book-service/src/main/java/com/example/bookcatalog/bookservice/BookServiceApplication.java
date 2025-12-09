@@ -38,9 +38,21 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         bootstrap.addBundle(hibernate);
     }
 
+    /**
+     * This method is called by the Dropwizard framework once the application is started.
+     * It initializes the application by creating a BookDAO using the Hibernate bundle, registering a database health check,
+     * running Flyway migrations on the database, and registering the BookResource with the Jersey client.
+     *
+     * @param configuration the configuration object used to configure the application
+     * @param environment the environment object used to register resources and health checks
+     * @throws Exception if the application encounters an error while starting
+     */
     @Override
     public void run(BookServiceConfiguration configuration, Environment environment) throws Exception {
         final BookDAO dao = new BookDAO(hibernate.getSessionFactory());
+
+        // Add CORS filter
+        configureCors(environment);
 
         // Read database config
         String dbUrl = configuration.getDataSourceFactory().getUrl();
@@ -81,6 +93,15 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
     @Override
     public String getName() {
         return "book-service";
+    }
+
+    private void configureCors(Environment environment) {
+        final var cors = environment.servlets().addFilter("CORS", org.eclipse.jetty.servlets.CrossOriginFilter.class);
+        cors.addMappingForUrlPatterns(java.util.EnumSet.allOf(jakarta.servlet.DispatcherType.class), true, "/*");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOWED_ORIGINS_PARAM, "*");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOWED_HEADERS_PARAM, "Content-Type,Authorization,X-Requested-With,Content-Length,Accept,Origin");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOWED_METHODS_PARAM, "GET,PUT,POST,DELETE,OPTIONS");
+        cors.setInitParameter(org.eclipse.jetty.servlets.CrossOriginFilter.ALLOW_CREDENTIALS_PARAM, "true");
     }
 
     public static void main(String[] args) throws Exception {
