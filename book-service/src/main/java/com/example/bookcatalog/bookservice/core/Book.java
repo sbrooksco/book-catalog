@@ -37,8 +37,8 @@ public class Book {
             message = "Invalid ISBN format")
     private String isbn;
 
-    @Column(name = "published_date")
-    private LocalDate publishedDate;
+    @Column(name = "published_year")
+    private Integer publishedYear;
 
     public Book() {
         // Required by Hibernate
@@ -77,9 +77,9 @@ public class Book {
 
     public void setIsbn(String isbn) { this.isbn = isbn; }
 
-    public LocalDate getPublishedDate() { return publishedDate; }
+    public Integer getPublishedYear() { return publishedYear; }
 
-    public void setPublishedDate(LocalDate publishedDate) { this.publishedDate = publishedDate; }
+    public void setPublishedDate(Integer publishedYear) { this.publishedYear = publishedYear; }
 
     @Override
     public boolean equals(Object o) {
@@ -90,7 +90,7 @@ public class Book {
                 Objects.equals(title, book.title) &&
                 Objects.equals(author, book.author) &&
                 Objects.equals(isbn, book.isbn) &&
-                Objects.equals(publishedDate, book.publishedDate);
+                Objects.equals(publishedYear, book.publishedYear);
     }
 
     @Override
