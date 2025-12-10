@@ -20,4 +20,17 @@ public class BookServiceConfiguration extends Configuration {
     public void setDataSourceFactory(DataSourceFactory factory) {
         this.database = factory;
     }
+
+    @NotNull
+    private String clerkDomain;
+
+    @JsonProperty("clerkDomain")
+    public String getClerkDomain() {
+        return clerkDomain;
+    }
+
+    @JsonProperty("clerkDomain")
+    public void setClerkDomain(String clerkDomain) {
+        this.clerkDomain = clerkDomain;
+    }
 }

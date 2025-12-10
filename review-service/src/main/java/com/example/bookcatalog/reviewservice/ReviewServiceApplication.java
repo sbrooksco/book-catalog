@@ -87,6 +87,10 @@ public class ReviewServiceApplication extends Application<ReviewServiceConfigura
         // Add CORS filter
         configureCors(environment);
 
+        // Add JWT authentication filter
+        environment.servlets().addFilter("JwtAuth", new com.example.bookcatalog.reviewservice.auth.JwtAuthFilter(configuration.getClerkDomain()))
+                .addMappingForUrlPatterns(java.util.EnumSet.allOf(jakarta.servlet.DispatcherType.class), true, "/*");
+
         // Get database config
         DataSourceFactory dsf = configuration.getDataSourceFactory();
 

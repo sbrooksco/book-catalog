@@ -21,3 +21,6 @@ database:
   validationQuery: "SELECT 1"
   properties:
     hibernate.default_schema: books_schema
+
+# Clerk authentication
+clerkDomain: ${CLERK_DOMAIN:-https://your-clerk-domain.clerk.accounts.dev}

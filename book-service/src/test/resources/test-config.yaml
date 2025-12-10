@@ -20,3 +20,6 @@ database:
     hibernate.dialect: org.hibernate.dialect.H2Dialect
     hibernate.hbm2ddl.auto: create-drop
   validationQuery: "SELECT 1"
+
+# Clerk authentication (dummy value for tests)
+clerkDomain: https://test-clerk-domain.clerk.accounts.dev

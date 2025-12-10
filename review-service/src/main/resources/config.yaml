@@ -26,3 +26,6 @@ database:
 #  Docker Compose overrides with service names like book-service
 #  Render overrides with public URLs
 bookServiceUrl: ${BOOK_SERVICE_URL:-http://localhost:8080}
+
+# Clerk authentication
+clerkDomain: ${CLERK_DOMAIN:-https://your-clerk-domain.clerk.accounts.dev}

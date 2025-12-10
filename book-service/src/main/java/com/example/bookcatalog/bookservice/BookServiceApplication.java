@@ -38,21 +38,16 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         bootstrap.addBundle(hibernate);
     }
 
-    /**
-     * This method is called by the Dropwizard framework once the application is started.
-     * It initializes the application by creating a BookDAO using the Hibernate bundle, registering a database health check,
-     * running Flyway migrations on the database, and registering the BookResource with the Jersey client.
-     *
-     * @param configuration the configuration object used to configure the application
-     * @param environment the environment object used to register resources and health checks
-     * @throws Exception if the application encounters an error while starting
-     */
     @Override
     public void run(BookServiceConfiguration configuration, Environment environment) throws Exception {
         final BookDAO dao = new BookDAO(hibernate.getSessionFactory());
 
         // Add CORS filter
         configureCors(environment);
+
+        // Add JWT authentication filter
+        environment.servlets().addFilter("JwtAuth", new com.example.bookcatalog.bookservice.auth.JwtAuthFilter(configuration.getClerkDomain()))
+                .addMappingForUrlPatterns(java.util.EnumSet.allOf(jakarta.servlet.DispatcherType.class), true, "/*");
 
         // Read database config
         String dbUrl = configuration.getDataSourceFactory().getUrl();
@@ -68,12 +63,13 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         // Register PostgreSQL driver explicitly
         Class.forName("org.postgresql.Driver");
 
-        // Run Flyway migrations
+        // Run Flyway migrations in dedicated schema
         Flyway flyway = Flyway.configure()
                 .dataSource(dbUrl, dbUser, dbPass)
-                .schemas("books_schema")
-                .locations("classpath:db") // make sure your SQL migrations are in src/main/resources/db
-                .table("flyway_schema_history_books") // Separate table for book-service
+                .schemas("books_schema") // Dedicated schema for book-service
+                .locations("classpath:db")
+                .table("flyway_schema_history")
+                .createSchemas(true) // Auto-create schema if it doesn't exist
                 .load();
 
         try {

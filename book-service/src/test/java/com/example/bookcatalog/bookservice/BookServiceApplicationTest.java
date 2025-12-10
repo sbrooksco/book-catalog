@@ -55,9 +55,9 @@ class BookServiceApplicationTest {
                 .request()
                 .get();
 
-        // Should return 200 (empty list initially) or 500 if DB not configured
+        // Should return 200 (empty list initially), 500 if DB not configured or 401 if JWT auth fails
         // For this test, we just verify the endpoint exists
-        assertThat(response.getStatus()).isIn(200, 500);
+        assertThat(response.getStatus()).isIn(200, 401, 500);
     }
 
     @Test

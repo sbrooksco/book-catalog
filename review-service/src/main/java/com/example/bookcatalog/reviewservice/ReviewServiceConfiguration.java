@@ -36,6 +36,20 @@ public class ReviewServiceConfiguration extends Configuration {
     public void setBookServiceUrl(String bookServiceUrl) {
         this.bookServiceUrl = bookServiceUrl;
     }
+
+    // --- Clerk authentication ---
+    @NotNull
+    private String clerkDomain;
+
+    @JsonProperty("clerkDomain")
+    public String getClerkDomain() {
+        return clerkDomain;
+    }
+
+    @JsonProperty("clerkDomain")
+    public void setClerkDomain(String clerkDomain) {
+        this.clerkDomain = clerkDomain;
+    }
 }
 
 
