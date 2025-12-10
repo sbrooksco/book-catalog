@@ -70,6 +70,7 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
                 .locations("classpath:db")
                 .table("flyway_schema_history")
                 .createSchemas(true) // Auto-create schema if it doesn't exist
+                .baselineOnMigrate(true)
                 .load();
 
         try {

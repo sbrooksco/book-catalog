@@ -100,6 +100,7 @@ public class ReviewServiceApplication extends Application<ReviewServiceConfigura
                 .schemas("reviews_schema")
                 .locations("classpath:db")
                 .table("flyway_schema_history_reviews") // Separate table for review-service
+                .baselineOnMigrate(true)
                 .load();
 
         LOGGER.info("Starting Flyway migrations...");
