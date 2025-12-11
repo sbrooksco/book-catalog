@@ -40,7 +40,9 @@ public class JwtAuthFilter implements Filter {
 
         // Allow health checks without auth
         String path = httpRequest.getRequestURI();
-        if (path.contains("/healthcheck") || path.contains("/admin")) {
+        if (path.equals("/metrics") ||
+                path.contains("/healthcheck") ||
+                path.contains("/admin")) {
             chain.doFilter(request, response);
             return;
         }

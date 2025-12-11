@@ -125,6 +125,18 @@
             <artifactId>jwks-rsa</artifactId>
             <version>0.22.1</version>
         </dependency>
+
+        <!-- Needed for metrics (prometheus and grafana -->
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_dropwizard</artifactId>
+            <version>0.16.0</version>
+        </dependency>
+        <dependency>
+            <groupId>io.prometheus</groupId>
+            <artifactId>simpleclient_servlet</artifactId>
+            <version>0.16.0</version>
+        </dependency>
     </dependencies>
 
     <build>

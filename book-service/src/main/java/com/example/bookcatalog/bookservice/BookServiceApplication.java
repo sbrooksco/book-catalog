@@ -1,5 +1,6 @@
 package com.example.bookcatalog.bookservice;
 
+import com.example.bookcatalog.bookservice.resources.MetricsResource;
 import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
 import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.core.Application;
@@ -10,6 +11,9 @@ import com.example.bookcatalog.bookservice.core.Book;
 import com.example.bookcatalog.bookservice.db.BookDAO;
 import com.example.bookcatalog.bookservice.health.DatabaseHealthCheck;
 import com.example.bookcatalog.bookservice.resources.BookResource;
+import io.prometheus.client.CollectorRegistry;
+import io.prometheus.client.dropwizard.DropwizardExports;
+import io.prometheus.client.exporter.MetricsServlet;
 import org.flywaydb.core.Flyway;
 import org.flywaydb.core.api.output.MigrateResult;
 import org.slf4j.Logger;
@@ -26,6 +30,15 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         }
     };
 
+    /**
+     * Initializes the application.
+     *
+     * This method is called by the Dropwizard framework once the application is started.
+     * It enables environment variable substitution in the configuration file and adds the Hibernate bundle
+     * to the application.
+     *
+     * @param bootstrap the Bootstrap object used to configure the application
+     */
     @Override
     public void initialize(io.dropwizard.core.setup.Bootstrap<BookServiceConfiguration> bootstrap) {
         // Enable environment variable substitution in config.yaml
@@ -38,6 +51,17 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         bootstrap.addBundle(hibernate);
     }
 
+    /**
+     * Start the application.
+     *
+     * This method is called by the Dropwizard framework once the application is started.
+     * It creates a BookDAO using the Hibernate bundle, runs Flyway migrations on the database, and registers the
+     * BookResource with the Jersey client and Book Service URL.
+     *
+     * @param configuration the configuration object used to configure the application
+     * @param environment the environment object used to register resources and health checks
+     * @throws Exception if the application encounters an error while starting
+     */
     @Override
     public void run(BookServiceConfiguration configuration, Environment environment) throws Exception {
         final BookDAO dao = new BookDAO(hibernate.getSessionFactory());
@@ -45,7 +69,7 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         // Add CORS filter
         configureCors(environment);
 
-        // Add JWT authentication filter
+        // Add JWT authentication filter.  COMMENT THIS OUT TO TEST WITHOUT AUTH TESTING (LOCALLY)
         environment.servlets().addFilter("JwtAuth", new com.example.bookcatalog.bookservice.auth.JwtAuthFilter(configuration.getClerkDomain()))
                 .addMappingForUrlPatterns(java.util.EnumSet.allOf(jakarta.servlet.DispatcherType.class), true, "/*");
 
@@ -57,6 +81,10 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         // Register the database health check.
         DatabaseHealthCheck healthCheck = new DatabaseHealthCheck(dbUrl, dbUser, dbPass);
         environment.healthChecks().register("database", healthCheck);
+
+        // Expose Prometheus metrics on the application port.
+        new io.prometheus.client.dropwizard.DropwizardExports(environment.metrics()).register();
+        environment.jersey().register(new MetricsResource());
 
         LOGGER.info("Database URL: {}", dbUrl);
 
@@ -87,11 +115,28 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
         LOGGER.info("BookCatalog application started successfully!");
     }
 
+    /**
+     * Returns the name of the application.
+     *
+     * This method is overridden from Application and it returns the name of the application.
+     * The name is used in the Dropwizard banner to identify the application.
+     *
+     * @return the name of the application
+     */
     @Override
     public String getName() {
         return "book-service";
     }
 
+    /**
+     * Configures CORS (Cross-Origin Resource Sharing) for the application.
+     *
+     * This method is called once the application is started and it sets up CORS
+     * to allow requests from any origin, with any of the standard HTTP headers,
+     * and with any of the standard HTTP methods.
+     *
+     * @param environment the environment object used to register resources and health checks
+     */
     private void configureCors(Environment environment) {
         final var cors = environment.servlets().addFilter("CORS", org.eclipse.jetty.servlets.CrossOriginFilter.class);
         cors.addMappingForUrlPatterns(java.util.EnumSet.allOf(jakarta.servlet.DispatcherType.class), true, "/*");
