@@ -13,6 +13,7 @@ import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Path("/reviews")
 @Produces(MediaType.APPLICATION_JSON)
@@ -48,6 +49,22 @@ public class ReviewResource {
                     .entity("Review with ID " + id + " not found")
                     .build();
         }
+    }
+
+    /**
+     * Gets all reviews for a given book.
+     *
+     * @param bookId The ID of the book to get reviews for.
+     * @return A list of all reviews for the given book.
+     */
+    @GET
+    @Path("/book/{bookId}")
+    @UnitOfWork
+    public List<Review> getReviewsByBook(@QueryParam("bookId") Integer bookId) {
+        // Note: this is a simple in-memory search.  In a production environment, this would be a database search.
+        return reviewDAO.findAll().stream()
+                .filter(review -> review.getBookId().equals(bookId))
+                .collect(Collectors.toList());
     }
 
     // GET books from book service

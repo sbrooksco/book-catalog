@@ -10,6 +10,7 @@ import com.example.bookcatalog.bookservice.db.BookDAO;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Path("/books")
 @Produces(MediaType.APPLICATION_JSON)
@@ -20,6 +21,36 @@ public class BookResource {
 
     public BookResource(BookDAO dao) {
         this.dao = dao;
+    }
+
+    /**
+     * Searches for books by title, author, or year.
+     * If a parameter is empty or null, it is ignored.
+     * If a parameter is not empty or null, it is used to filter the results.
+     * The results are case-insensitive.
+     *
+     * @param title the title of the book
+     * @param author the author of the book
+     * @param year the year of the book
+     * @return a list of books that match the search criteria
+     */
+    @GET
+    @Path("/search")
+    @UnitOfWork
+    public List<Book> searchBooks(@QueryParam("title") String title,
+                                  @QueryParam("author") String author,
+                                  @QueryParam("year") Integer year) {
+
+        // NOTE, this is a simple in-memory search.  In a production environment, this would be a database search.
+        List<Book> allBooks = dao.findAll();
+        return allBooks.stream()
+                .filter(book -> title == null || title.isEmpty() ||
+                        book.getTitle().toLowerCase().contains(title.toLowerCase()))
+                .filter(book -> author == null || author.isEmpty() ||
+                        book.getAuthor().toLowerCase().contains(author.toLowerCase()))
+                .filter(book -> year == null ||
+                        (book.getPublishedYear() != null && book.getPublishedYear().equals(year)))
+                .collect(Collectors.toList());
     }
 
     // GET /books - list all books
