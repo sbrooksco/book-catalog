@@ -60,11 +60,21 @@ public class ReviewResource {
     @GET
     @Path("/book/{bookId}")
     @UnitOfWork
-    public List<Review> getReviewsByBook(@QueryParam("bookId") Integer bookId) {
-        // Note: this is a simple in-memory search.  In a production environment, this would be a database search.
-        return reviewDAO.findAll().stream()
-                .filter(review -> review.getBookId().equals(bookId))
+    public List<Review> getReviewsByBook(@PathParam("bookId") Integer bookId) {
+        List<Review> allReviews = reviewDAO.findAll();
+        System.out.println("DEBUG: Looking for reviews with bookId: " + bookId);
+        System.out.println("DEBUG: Total reviews in database: " + allReviews.size());
+
+        List<Review> filtered = allReviews.stream()
+                .filter(review -> {
+                    Integer reviewBookId = review.getBookId();
+                    System.out.println("DEBUG: Review " + review.getId() + " has bookId: " + reviewBookId);
+                    return reviewBookId != null && reviewBookId.equals(bookId);
+                })
                 .collect(Collectors.toList());
+
+        System.out.println("DEBUG: Found " + filtered.size() + " reviews for book " + bookId);
+        return filtered;
     }
 
     // GET books from book service
