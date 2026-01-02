@@ -1,0 +1,30 @@
+server:
+  applicationConnectors:
+    - type: http
+      port: 8080
+  adminConnectors:
+    - type: http
+      port: 8081
+
+logging:
+  level: INFO
+  loggers:
+    io.dropwizard: INFO
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+
+database:
+  driverClass: org.postgresql.Driver
+  user: bookuser
+  password: bookpass
+  # On the desktop
+  url: jdbc:postgresql://localhost:5432/bookcatalog
+  # In a container
+  url: jdbc:postgresql://host.docker.internal:5432/book_catalog
+  properties:
+    charSet: UTF-8
+
+# For inside docker:
+#bookServiceUrl: "http://book-service:8080"
+# Local
+bookServiceUrl: "http://localhost:8080"

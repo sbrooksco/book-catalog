@@ -1,0 +1,12 @@
+scrape_configs:
+  - job_name: 'book-service'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['book-service:8080']  # Use service name from docker-compose
+    metrics_path: '/metrics'  # Or wherever you expose Prometheus metrics
+  
+  - job_name: 'review-service'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['review-service:8082']  # Use service name from docker-compose
+    metrics_path: '/metrics'

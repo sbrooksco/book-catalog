@@ -1,0 +1,22 @@
+
+
+curl -X POST -H "Content-Type: application/json" -d '{"title":"The Hobbit","author":"J.R.R. Tolkien"}' https://book-service-innn.onrender.com/books
+
+curl https://book-service-innn.onrender.com/books
+
+
+
+% curl https://review-service-x2si.onrender.com/reviews
+[]
+
+
+
+Database Structure:
+
+book-catalog-db (bookcatalog_n44u)
+├── books_schema
+│   ├── books
+│   └── flyway_schema_history
+└── reviews_schema
+    ├── reviews
+    └── flyway_schema_history

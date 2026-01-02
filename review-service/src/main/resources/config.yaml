@@ -1,0 +1,31 @@
+server:
+  applicationConnectors:
+    - type: http
+      #port: 8082  # Different port from book-service!
+      port: ${PORT:-8082}
+  adminConnectors:
+    - type: http
+      port: 8083
+
+logging:
+  level: INFO
+  loggers:
+    org.example: DEBUG
+
+database:
+  driverClass: org.postgresql.Driver
+  user: ${DATABASE_USER:-cataloguser}
+  password: ${DATABASE_PASSWORD:-cataloguser}
+  url: ${DATABASE_URL:-jdbc:postgresql://catalogdb:5432/catalogdb}
+  validationQuery: "SELECT 1"
+  properties:
+    hibernate.default_schema: reviews_schema
+
+# The fallback is just for when running this directly, docker-compose sets bookServiceUrl
+#  When running locally (no Docker), services are on localhost
+#  Docker Compose overrides with service names like book-service
+#  Render overrides with public URLs
+bookServiceUrl: ${BOOK_SERVICE_URL:-http://localhost:8080}
+
+# Clerk authentication
+clerkDomain: ${CLERK_DOMAIN:-https://your-clerk-domain.clerk.accounts.dev}

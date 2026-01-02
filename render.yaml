@@ -1,0 +1,62 @@
+databases:
+  - name: bookdb
+    databaseName: bookdb
+    user: bookuser
+    plan: free
+
+  - name: reviewdb
+    databaseName: reviewdb
+    user: reviewuser
+    plan: free
+
+services:
+  - type: web
+    name: book-service
+    env: docker
+    dockerfilePath: ./book-service/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /healthcheck
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: bookdb
+          property: connectionString
+      - key: DATABASE_USER
+        fromDatabase:
+          name: bookdb
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: bookdb
+          property: password
+
+  - type: web
+    name: review-service
+    env: docker
+    dockerfilePath: ./review-service/Dockerfile
+    dockerContext: .
+    plan: free
+    healthCheckPath: /healthcheck
+    envVars:
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        fromDatabase:
+          name: reviewdb
+          property: connectionString
+      - key: DATABASE_USER
+        fromDatabase:
+          name: reviewdb
+          property: user
+      - key: DATABASE_PASSWORD
+        fromDatabase:
+          name: reviewdb
+          property: password
+      - key: BOOK_SERVICE_URL
+        fromService:
+          name: book-service
+          type: web
+          property: host

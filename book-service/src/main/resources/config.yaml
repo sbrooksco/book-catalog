@@ -1,0 +1,26 @@
+server:
+  applicationConnectors:
+    - type: http
+      #port: 8080
+      port: ${PORT:-8080}
+  adminConnectors:
+    - type: http
+      port: 8081
+
+logging:
+  level: INFO
+  loggers:
+    org.example: DEBUG
+
+database:
+  driverClass: org.postgresql.Driver
+  user: ${DATABASE_USER:-cataloguser}
+  password: ${DATABASE_PASSWORD:-cataloguser}
+  # This is the fallback when running locally, when deploying to the cloud, Render will set the DATABASE_URL
+  url: ${DATABASE_URL:-jdbc:postgresql://postgres:5432/catalogdb}
+  validationQuery: "SELECT 1"
+  properties:
+    hibernate.default_schema: books_schema
+
+# Clerk authentication
+clerkDomain: ${CLERK_DOMAIN:-https://your-clerk-domain.clerk.accounts.dev}

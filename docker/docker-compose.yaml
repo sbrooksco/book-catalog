@@ -1,0 +1,88 @@
+name: book-catalog
+
+services:
+  catalogdb:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: cataloguser
+      POSTGRES_PASSWORD: catalogpass
+      POSTGRES_DB: catalogdb
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cataloguser -d catalogdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  book-service:
+    build:
+      context: ..
+      dockerfile: book-service/Dockerfile
+    ports:
+      - "8080:8080"
+      - "8081:8081"
+    depends_on:
+      catalogdb:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: jdbc:postgresql://catalogdb:5432/catalogdb
+      DATABASE_USER: cataloguser
+      DATABASE_PASSWORD: catalogpass
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/healthcheck || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 40s
+
+  review-service:
+    build:
+      context: ..
+      dockerfile: review-service/Dockerfile
+    ports:
+      - "8082:8082"
+      - "8083:8083"
+    depends_on:
+      catalogdb:
+        condition: service_healthy
+      book-service:
+        condition: service_healthy # Wait for book-service to be healthy before starting review-service avoids race condition on database.
+    environment:
+      DATABASE_URL: jdbc:postgresql://catalogdb:5432/catalogdb
+      DATABASE_USER: cataloguser
+      DATABASE_PASSWORD: catalogpass
+      BOOK_SERVICE_URL: http://book-service:8080
+
+  # Add prometheus and grafana for monitoring
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./prometheus.yaml:/etc/prometheus/prometheus.yaml
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yaml'
+    # The depends_on will ensure that prometheus starts after the book-service and review-service are healthy
+    # as well as running on the same network.
+    depends_on:
+      - book-service
+      - review-service
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+    depends_on:
+      - prometheus
+    volumes:
+      - grafana-data:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
+
+# Create a persistent volume for grafana data
+volumes:
+  grafana-data:
