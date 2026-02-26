@@ -3,6 +3,8 @@ kind: ConfigMap
 metadata:
   name: book-config
 data:
-  DATABASE_URL: jdbc:postgresql://postgres:5432/bookdb
-  DATABASE_USER: bookuser
-  DATABASE_NAME: bookdb
+  DATABASE_URL: jdbc:postgresql://postgres:5432/catalogdb
+  DATABASE_USER: cataloguser
+  DATABASE_NAME: catalogdb
+  BOOK_SERVICE_URL: http://book-service:8080
+  #CLERK_DOMAIN: clerk.dev

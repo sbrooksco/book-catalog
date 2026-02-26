@@ -52,11 +52,11 @@ public class BookServiceApplication extends Application<BookServiceConfiguration
     }
 
     /**
-     * Start the application.
+     * This is the starting point for the application.
      *
      * This method is called by the Dropwizard framework once the application is started.
-     * It creates a BookDAO using the Hibernate bundle, runs Flyway migrations on the database, and registers the
-     * BookResource with the Jersey client and Book Service URL.
+     * It creates a BookDAO using the Hibernate bundle, runs Flyway migrations on the database,
+     * and registers the BookResource with the Jersey client and Book Service URL.
      *
      * @param configuration the configuration object used to configure the application
      * @param environment the environment object used to register resources and health checks

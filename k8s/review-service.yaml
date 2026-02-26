@@ -1,37 +1,38 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: book-catalog
+  name: review-service
 spec:
+  # NodePort for external access. Use ClusterIP for internal access.
   type: NodePort
   ports:
-    - port: 8080
-      targetPort: 8080
-      nodePort: 30080
+    - port: 8082
+      targetPort: 8082
+      nodePort: 30082
   selector:
-    app: book-catalog
+    app: review-service
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: book-catalog
+  name: review-service
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: book-catalog
+      app: review-service
   template:
     metadata:
       labels:
-        app: book-catalog
+        app: review-service
     spec:
       containers:
-        - name: book-catalog
-          image: book-catalog:latest
-          imagePullPolicy: Never
+        - name: review-service
+          image: ceres1801/review-service:latest
+          imagePullPolicy: IfNotPresent
           ports:
-            - containerPort: 8080
-            - containerPort: 8081
+            - containerPort: 8082
+            - containerPort: 8083
           env:
             - name: DATABASE_URL
               valueFrom:
@@ -48,8 +49,13 @@ spec:
                 secretKeyRef:
                   name: book-secrets
                   key: DATABASE_PASSWORD
+            - name: BOOK_SERVICE_URL
+              valueFrom:
+                configMapKeyRef:
+                  name: book-config
+                  key: BOOK_SERVICE_URL
           # Comment this out so the CMD from the Dockefile is run
-          # command: ["java", "-jar", "book-catalog-1.0-SNAPSHOT.jar", "server", "src/main/resources/config.yaml"]
+          # command: ["java", "-jar", "review-service-1.0-SNAPSHOT.jar", "server", "src/main/resources/config.yaml"]
           # Or you could match the name in the docker file
           # command: ["java", "-jar", "app.jar", "server", "src/main/resources/config.yaml"]
           # Or more likely
